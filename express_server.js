@@ -1,3 +1,8 @@
+function generateRandomString() {
+const randomId = Math.random().toString(36).slice(2, 8);
+return randomId;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 // Dependencies
 /////////////////////////////////////////////////////////////////////////////////
@@ -52,9 +57,16 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+/**
+ * Create a URL Page
+ * POST /urls
+ */
+
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  console.log(req.body.longURL); // Log the POST request body to the console
+  const shortUrl = generateRandomString();
+  urlDatabase[shortUrl] = req.body.longURL;
+  res.redirect("/urls");
 });
 
 /**
@@ -63,8 +75,8 @@ app.post("/urls", (req, res) => {
  */
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  res.render("urls_show", templateVars);
+  // const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  res.render("urls_show");
 });
 
 
