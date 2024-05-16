@@ -66,7 +66,7 @@ app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
-  res.redirect(`/urls/:${id}`);
+  res.redirect(`/urls/${id}`);
 });
 
 /**
@@ -85,6 +85,17 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+
+/**
+ * Delete a URL Page
+ * POST /urls
+ */
+
+app.post("/urls/:urlId/delete", (req, res) => {
+  const urlId = req.params.urlId;
+  delete urlDatabase[urlId];
+  res.redirect('/urls');
+});
 
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
