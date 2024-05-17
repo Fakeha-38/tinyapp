@@ -1,6 +1,6 @@
 function generateRandomString() {
-const randomId = Math.random().toString(36).slice(2, 8);
-return randomId;
+  const randomId = Math.random().toString(36).slice(2, 8);
+  return randomId;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -48,14 +48,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-/**
- * Create a URL Page
- * GET /urls/new
- */
-
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
 
 /**
  * Create a URL Page
@@ -66,7 +58,17 @@ app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
+  console.log(urlDatabase);
   res.redirect(`/urls/${id}`);
+});
+
+/**
+ * Create a NEW URL
+ * GET /urls/new
+ */
+
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
 });
 
 /**
@@ -75,15 +77,19 @@ app.post("/urls", (req, res) => {
  */
 
 app.get("/urls/:id", (req, res) => {
-  
+
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  console.log("template var: ", templateVars);
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:id", (req, res) => {
-  // const longURL = ...
-  res.redirect(longURL);
-});
+
+// I THINK THIS IS UNNCESSARY AND I WILL HAVE TO DELET IT LATER
+// app.get("/url/:id", (req, res) => {
+//   // const longURL = ...
+//   const id = req.params.id;
+//   res.redirect(urlDatabase[id]);
+// });
 
 
 /**
@@ -96,6 +102,25 @@ app.post("/urls/:urlId/delete", (req, res) => {
   delete urlDatabase[urlId];
   res.redirect('/urls');
 });
+
+
+/**
+ * Update a URL Page
+ * GET /urls/:id/edit
+ */
+app.post("/urls/:urlId", (req, res) => {
+  const updatedURL = req.body.updatedURL;
+  const urlId = req.params.urlId;
+  urlDatabase[urlId] = updatedURL;
+  const templateVars = { id: urlId, longURL: updatedURL };
+  res.render("urls_show", templateVars);
+});
+
+/**
+ * Update a URL Page
+ * POST /urls/:id/edit
+ */
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
