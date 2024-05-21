@@ -7,6 +7,8 @@ function generateRandomString() {
 // Dependencies
 /////////////////////////////////////////////////////////////////////////////////
 const express = require("express");
+const cookieParser = require('cookie-parser')
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Set-up / Initialize
@@ -16,6 +18,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 /////////////////////////////////////////////////////////////////////////////////
 // Database
@@ -106,7 +109,7 @@ app.post("/urls/:urlId/delete", (req, res) => {
 
 /**
  * Update a URL Page
- * GET /urls/:id/edit
+ * POST /urls/:id
  */
 app.post("/urls/:urlId", (req, res) => {
   const updatedURL = req.body.updatedURL;
@@ -117,9 +120,15 @@ app.post("/urls/:urlId", (req, res) => {
 });
 
 /**
- * Update a URL Page
- * POST /urls/:id/edit
+ * Login User
+ * POST /login, setting up the cookie from user login form
  */
+app.post("/login", (req, res) => {
+  const formUsername = req.body.username;
+  res.cookie('username', formUsername);
+  console.log('Request body: ', req.body);
+  res.redirect("/urls");
+});
 
 
 /////////////////////////////////////////////////////////////////////////////////
