@@ -127,10 +127,24 @@ app.post("/urls/:urlId", (req, res) => {
  */
 app.post("/login", (req, res) => {
   const formUsername = req.body.username;
-  res.cookie('username', formUsername);
-  console.log('Request body: ', req.body);
+  if (formUsername) {
+    res.cookie('username', formUsername);
+    console.log('Request body: ', req.body);
+    res.redirect("/urls");
+  } else {
+    res.end(`Please enter valid user name.`);
+  }
+});
+
+/**
+ * Logout User
+ * POST /logout, clearing the username cookie and logging out the user
+ */
+app.post("/logout", (req, res) => {
+  res.clearCookie('username', req.body.username);
   res.redirect("/urls");
 });
+
 
 
 /////////////////////////////////////////////////////////////////////////////////
