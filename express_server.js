@@ -29,6 +29,20 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // Routes
 /////////////////////////////////////////////////////////////////////////////////
@@ -47,8 +61,9 @@ app.get("/", (req, res) => {
  * GET /urls
  */
 app.get("/urls", (req, res) => {
+  const userId = req.cookies["user_id"];
   const templateVars = {
-    username: req.cookies["username"],
+    user: users[userId],
     urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
@@ -73,7 +88,8 @@ app.post("/urls", (req, res) => {
  */
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new", {username: null});
+  const userId = req.cookies["user_id"];
+  res.render("urls_new", {user: users[userId]});
 });
 
 /**
@@ -82,8 +98,11 @@ app.get("/urls/new", (req, res) => {
  */
 
 app.get("/urls/:id", (req, res) => {
-
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: null };
+  const userId = req.cookies["user_id"];
+  const templateVars = { 
+    id: req.params.id, 
+    longURL: urlDatabase[req.params.id],
+    user: users[userId] };
   console.log("template var: ", templateVars);
   res.render("urls_show", templateVars);
 });
@@ -116,8 +135,9 @@ app.post("/urls/:urlId/delete", (req, res) => {
 app.post("/urls/:urlId", (req, res) => {
   const updatedURL = req.body.updatedURL;
   const urlId = req.params.urlId;
+  const userId = req.cookies["user_id"];
   urlDatabase[urlId] = updatedURL;
-  const templateVars = { id: urlId, longURL: updatedURL,  username: null };
+  const templateVars = { id: urlId, longURL: updatedURL,  user: users[userId] };
   res.render("urls_show", templateVars);
 });
 
@@ -151,14 +171,29 @@ app.post("/logout", (req, res) => {
  */
 
 app.get("/register", (req, res) => {
-  // const id = req.cookies["user_id"];
-  // const templateVars = {
-  //   // username: null
-  //   user: users[id]
-  // };
-  res.render("register",  {username: null});
+  const userId = req.cookies["user_id"];
+  res.render("register",  {user: users[userId]});
 });
 
+app.post("/register", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  if (email === "" || password === "") {
+    res.status(400).send('Email and/or password cannot be empty.');
+  }
+  const id = generateRandomString();
+    users[id] = {
+      id,
+      email,
+      password
+    };
+    const templateVars = {
+      user: users[id]
+    };
+    console.log("Updated user object: ${users}", users);
+    res.cookie("user_id", id);
+    res.redirect("/urls");
+});
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
 /////////////////////////////////////////////////////////////////////////////////

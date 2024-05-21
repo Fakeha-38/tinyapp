@@ -17,11 +17,11 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <% if (username) { %>
+      <% if (user) { %>
       <div class="col-4">
         
           <h5 style="color: #ffffff;">
-            Logged in as: <%= username %>
+            Logged in as: <%= user.email %>
           </h5>        
       </div>
       <div class="col-4">
