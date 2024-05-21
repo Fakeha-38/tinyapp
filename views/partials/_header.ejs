@@ -12,11 +12,26 @@
     >
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
+    <div class="collapse navbar-collapse row justify-content-between" id="navbarNavAltMarkup">
+      <div class="navbar-nav col-4">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+      </div>
+      <div class="col-4">
+        <form action="/login" method="POST">
+          <input name="userName" class="" placeholder="User Name">
+          <button type="submit" class="btn btn-outline-dark">Login</button>
+        </form>
       </div>
     </div>
   </nav>
 </header>
+
+<!-- <div class="row justify-content-between">
+  <div class="col-4">
+    One of two columns
+  </div>
+  <div class="col-4">
+    One of two columns
+  </div>
+</div> -->
