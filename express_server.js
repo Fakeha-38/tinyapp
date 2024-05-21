@@ -73,7 +73,7 @@ app.post("/urls", (req, res) => {
  */
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  res.render("urls_new", {username: null});
 });
 
 /**
@@ -83,7 +83,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
 
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: null };
   console.log("template var: ", templateVars);
   res.render("urls_show", templateVars);
 });
@@ -117,7 +117,7 @@ app.post("/urls/:urlId", (req, res) => {
   const updatedURL = req.body.updatedURL;
   const urlId = req.params.urlId;
   urlDatabase[urlId] = updatedURL;
-  const templateVars = { id: urlId, longURL: updatedURL };
+  const templateVars = { id: urlId, longURL: updatedURL,  username: null };
   res.render("urls_show", templateVars);
 });
 
@@ -145,7 +145,19 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+/**
+ * Register User
+ * POST /logout, clearing the username cookie and logging out the user
+ */
 
+app.get("/register", (req, res) => {
+  // const id = req.cookies["user_id"];
+  // const templateVars = {
+  //   // username: null
+  //   user: users[id]
+  // };
+  res.render("register",  {username: null});
+});
 
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
