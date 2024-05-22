@@ -42,7 +42,7 @@ const users = {
   },
 };
 
-const verifyUserByEmail = function (email, users) {
+const findUserByEmail = function (email, users) {
   for (const key in users) {
     if (users[key].email === email) {
       return users[key];
@@ -195,7 +195,7 @@ app.post("/register", (req, res) => {
     res.status(400).send('Email and/or password cannot be empty.');
   }
 
-  if (!verifyUserByEmail(email, users)) {
+  if (!findUserByEmail(email, users)) {
     const userId = generateRandomString();
     users[userId] = {
       userId,
@@ -207,9 +207,11 @@ app.post("/register", (req, res) => {
     // };
     res.cookie("user_id", userId);
     res.redirect("/urls");
+    return;
+  } else {
+    res.status(400).send('This email is already registered.');
   }
 
-  res.status(400).send('This email is already registered.');
 });
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
