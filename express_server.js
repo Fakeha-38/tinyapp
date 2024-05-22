@@ -52,7 +52,7 @@ const findUserByEmail = function (email, users) {
 };
 
 /////////////////////////////////////////////////////////////////////////////////
-// Routes
+// Routes ------- GET
 /////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -71,13 +71,92 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
   console.log(userId);
-  console.log("Extracted user from the cookie: ", users[userId]);
+  console.log("UserID on /url page: ", users[userId]);
   const templateVars = {
     user: users[userId],
     urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+
+
+/**
+ * Create a NEW URL
+ * GET /urls/new
+ */
+
+app.get("/urls/new", (req, res) => {
+  const userId = req.cookies["user_id"];
+  console.log("url/new userID: ", userId)
+  if (userId === undefined) {
+    res.redirect("/login");
+  } else {
+    res.render("urls_new", {user: users[userId]});
+  }
+});
+
+/**
+ * :id Page
+ * GET /urls:id
+ */
+
+app.get("/urls/:id", (req, res) => {
+  const userId = req.cookies["user_id"];
+  for (let ids in urlDatabase) {
+    if (req.params.id === ids) {
+      const templateVars = { 
+        id: req.params.id, 
+        longURL: urlDatabase[req.params.id],
+        user: users[userId] };
+      console.log("template var: ", templateVars);
+      res.render("urls_show", templateVars);
+    }
+  }
+  res.status(404).send('The shortened URL ID does not exist');
+  
+});
+
+/**
+ * login Page
+ * GET /login
+ */
+
+app.get("/login", (req, res) => {
+  const userId = req.cookies["user_id"];
+  console.log("user id from login: ", userId);
+  if (userId) { // Checking if the nuser is already logged in
+    res.redirect("/urls");
+  }
+  const templateVars = {
+    user: users[userId]
+  };
+  res.render("login", templateVars);
+});
+
+
+/**
+ * Register User
+ * GET /register, Showing up the form to register as a new user
+ */
+
+app.get("/register", (req, res) => {
+  const userId = req.cookies["user_id"];
+  if (userId) { // Checking if the nuser is already logged in
+    res.redirect("/urls");
+  }
+  res.render("register",  {user: users[userId]});
+});
+
+// I THINK THIS IS UNNCESSARY AND I WILL HAVE TO DELET IT LATER
+// app.get("/url/:id", (req, res) => {
+//   // const longURL = ...
+//   const id = req.params.id;
+//   res.redirect(urlDatabase[id]);
+// });
+
+/////////////////////////////////////////////////////////////////////////////////
+// Routes ------- POST
+/////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Create a URL Page
@@ -89,50 +168,13 @@ app.post("/urls", (req, res) => {
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
   console.log(urlDatabase);
-  res.redirect(`/urls/${id}`);
-});
-
-/**
- * Create a NEW URL
- * GET /urls/new
- */
-
-app.get("/urls/new", (req, res) => {
   const userId = req.cookies["user_id"];
-  res.render("urls_new", {user: users[userId]});
+  if(!userId) {
+    res.status(403).send('You need to log in to shorten the url');
+  } else {
+    res.redirect(`/urls/${id}`);
+  }
 });
-
-/**
- * :id Page
- * GET /urls:id
- */
-
-app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
-  const templateVars = { 
-    id: req.params.id, 
-    longURL: urlDatabase[req.params.id],
-    user: users[userId] };
-  console.log("template var: ", templateVars);
-  res.render("urls_show", templateVars);
-});
-
-app.get("/login", (req, res) => {
-  const userId = req.cookies["user_id"];
-  const templateVars = {
-    user: users[userId]
-  };
-  res.render("login", templateVars);
-});
-
-
-// I THINK THIS IS UNNCESSARY AND I WILL HAVE TO DELET IT LATER
-// app.get("/url/:id", (req, res) => {
-//   // const longURL = ...
-//   const id = req.params.id;
-//   res.redirect(urlDatabase[id]);
-// });
-
 
 /**
  * Delete a URL Page
@@ -186,21 +228,11 @@ app.post("/login", (req, res) => {
 
 /**
  * Logout User
- * POST /logout, clearing the username cookie and logging out the user
+ * POST /logout, clearing the user_id cookie and logging out the user
  */
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
   res.redirect("/login");
-});
-
-/**
- * Register User
- * GET /register, Sgowing up the form to register as a new user
- */
-
-app.get("/register", (req, res) => {
-  const userId = req.cookies["user_id"];
-  res.render("register",  {user: users[userId]});
 });
 
 /**
@@ -222,9 +254,6 @@ app.post("/register", (req, res) => {
       email,
       password
     };
-    // const templateVars = {
-    //   user: users[userId]
-    // };
     res.cookie("user_id", userId);
     res.redirect("/urls");
     return;
@@ -233,6 +262,7 @@ app.post("/register", (req, res) => {
   }
 
 });
+
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
 /////////////////////////////////////////////////////////////////////////////////
