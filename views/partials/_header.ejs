@@ -30,10 +30,12 @@
         </form>
       </div>
       <% } else { %>
-      <div class="col-4">
-        <form action="/login" method="POST">
-          <input name="username" class="" placeholder="User Name">
-          <button type="submit" class="btn btn-outline-dark">Login</button>
+      <div class="col-4 row justify-content-between">
+        <form action="/login" method="GET" class="col-4">
+          <button type="submit" class="btn btn-outline-light">Login</button>
+        </form>
+        <form action="/register" method="GET" class="col-4">
+          <button type="submit" class="btn btn-outline-light">Register</button>
         </form>
       </div>
       <% } %>

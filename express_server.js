@@ -70,6 +70,8 @@ app.get("/", (req, res) => {
  */
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
+  console.log(userId);
+  console.log("Extracted user from the cookie: ", users[userId]);
   const templateVars = {
     user: users[userId],
     urls: urlDatabase };
@@ -115,6 +117,14 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get("/login", (req, res) => {
+  const userId = req.cookies["user_id"];
+  const templateVars = {
+    user: users[userId]
+  };
+  res.render("login", templateVars);
+});
+
 
 // I THINK THIS IS UNNCESSARY AND I WILL HAVE TO DELET IT LATER
 // app.get("/url/:id", (req, res) => {
@@ -154,15 +164,25 @@ app.post("/urls/:urlId", (req, res) => {
  * POST /login, setting up the cookie from user login form
  */
 app.post("/login", (req, res) => {
-  const formUsername = req.body.username;
-  if (formUsername) {
-    res.cookie('username', formUsername);
-    console.log('Request body: ', req.body);
-    res.redirect("/urls");
-  } else {
-    res.end(`Please enter valid user name.`);
+  // res.cookie('user', req.body.email);
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = findUserByEmail(email, users);
+  console.log('user during login: ', user)
+  if (email === "" || password === "") { // No email or password input
+    res.status(403).send('Email and/or password cannot be empty.');
+  } else if (!user) {
+    res.status(403).send('This email is not registered.');
+  } else if (user.password !== password) {
+    res.status(403).send('Wrong password.');
   }
+
+  const userId = user.userId;
+  console.log('User ID from post login: ', userId);
+  res.cookie('user_id', userId);
+  res.redirect("/urls");
 });
+
 
 /**
  * Logout User
