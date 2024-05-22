@@ -42,6 +42,14 @@ const users = {
   },
 };
 
+const verifyUserByEmail = function (email, users) {
+  for (const key in users) {
+    if (users[key].email === email) {
+      return users[key];
+    }
+  }
+  return null;
+};
 
 /////////////////////////////////////////////////////////////////////////////////
 // Routes
@@ -161,13 +169,13 @@ app.post("/login", (req, res) => {
  * POST /logout, clearing the username cookie and logging out the user
  */
 app.post("/logout", (req, res) => {
-  res.clearCookie('username', req.body.username);
+  res.clearCookie('user_id');
   res.redirect("/urls");
 });
 
 /**
  * Register User
- * POST /logout, clearing the username cookie and logging out the user
+ * GET /register, Sgowing up the form to register as a new user
  */
 
 app.get("/register", (req, res) => {
@@ -175,28 +183,38 @@ app.get("/register", (req, res) => {
   res.render("register",  {user: users[userId]});
 });
 
+/**
+ * Register User
+ * POST /register, handling the new registration data in database (our users object)
+ */
+
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (email === "" || password === "") {
     res.status(400).send('Email and/or password cannot be empty.');
   }
-  const id = generateRandomString();
-    users[id] = {
-      id,
+
+  if (!verifyUserByEmail(email, users)) {
+    const userId = generateRandomString();
+    users[userId] = {
+      userId,
       email,
       password
     };
-    const templateVars = {
-      user: users[id]
-    };
-    console.log("Updated user object: ${users}", users);
-    res.cookie("user_id", id);
+    // const templateVars = {
+    //   user: users[userId]
+    // };
+    res.cookie("user_id", userId);
     res.redirect("/urls");
+  }
+
+  res.status(400).send('This email is already registered.');
 });
 /////////////////////////////////////////////////////////////////////////////////
 // Old tests
 /////////////////////////////////////////////////////////////////////////////////
+
 
 /**
  * Fetch Page
