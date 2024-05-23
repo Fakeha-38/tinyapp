@@ -25,22 +25,38 @@ app.use(cookieParser());
 /////////////////////////////////////////////////////////////////////////////////
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "qwe321",
+  },
 };
 
+
 const users = {
-  userRandomID: {
-    id: "userRandomID",
+  "aJ48lW": {
+    userId: "aJ48lW",
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
   },
   user2RandomID: {
-    id: "user2RandomID",
+    userId: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
+  "qwe321": {
+    userId: "qwe321",
+    email: "fakeha.iftikhar@gmail.com",
+    password: "123"
+  }
 };
+
+/////////////////////////////////////////////////////////////////////////////////
+// FUNCTIONS
+/////////////////////////////////////////////////////////////////////////////////
 
 const findUserByEmail = function (email, users) {
   for (const key in users) {
@@ -50,6 +66,29 @@ const findUserByEmail = function (email, users) {
   }
   return null;
 };
+
+const checkShortUrl = function (shortUrl) {
+  for (let short in urlDatabase) {
+    if (short === shortUrl) {
+      return shortUrl;
+    }
+  }
+  return undefined;
+};
+
+const urlsForUser = function (id){
+  if (id === undefined) {
+    return undefined;
+  }
+  const currentUserUrls = {};
+  for (let ids in urlDatabase) {
+    if (urlDatabase[ids].userID === id) {
+      currentUserUrls[ids] = urlDatabase[ids];
+    }
+  }
+  return currentUserUrls;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Routes ------- GET
@@ -70,11 +109,12 @@ app.get("/", (req, res) => {
  */
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
-  console.log(userId);
+  const currentUserUrls = urlsForUser(userId)
+  console.log("url obj from func: ", urlsForUser(userId));
   console.log("UserID on /url page: ", users[userId]);
   const templateVars = {
     user: users[userId],
-    urls: urlDatabase };
+    urls: currentUserUrls };
   res.render("urls_index", templateVars);
 });
 
@@ -99,21 +139,49 @@ app.get("/urls/new", (req, res) => {
  * :id Page
  * GET /urls:id
  */
+// app.get("/u/:id", (req, res) => {
+//   const id = req.params.id;
+
+//   if (urlDatabase[id] === undefined) {
+//     res.status(403).send(`This tinyURL hasn't yet been registered.`);
+//     return;
+//   }
+
+//   const longURL = urlDatabase[id].longURL;
+
+//   if (longURL === undefined) {
+//     res.status(403).send(`This tinyURL doesn't have anything assigned yet, please adjust that at 'localhost:8080/urls/new'`);
+//   } else {
+//     res.redirect(longURL);
+//   }
+// });
 
 app.get("/urls/:id", (req, res) => {
   const userId = req.cookies["user_id"];
-  for (let ids in urlDatabase) {
-    if (req.params.id === ids) {
+  if (!userId) {
+    res.redirect("/urls");
+  }
+  const urlID = req.params.id;
+  if (checkShortUrl(urlID) === undefined) {
+    res.status(404).send(`This tinyURL hasn't yet been created.`);
+    return;
+  } else {
+    const longUrl = urlDatabase[urlID].longURL;
+    const currentUserUrls= urlsForUser(userId);
+    if (currentUserUrls[urlID]) {
       const templateVars = { 
-        id: req.params.id, 
-        longURL: urlDatabase[req.params.id],
+        id: urlID, 
+        longURL: longUrl,
         user: users[userId] };
       console.log("template var: ", templateVars);
       res.render("urls_show", templateVars);
+    } else {
+      res.status(404).send(`This tinyURL does not belong to any of your URLs`);
+
     }
+    
   }
-  res.status(404).send('The shortened URL ID does not exist');
-  
+  console.log("URL ID object from data base", urlID);  
 });
 
 /**
@@ -123,6 +191,7 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/login", (req, res) => {
   const userId = req.cookies["user_id"];
+  console.log("user")
   console.log("user id from login: ", userId);
   if (userId) { // Checking if the nuser is already logged in
     res.redirect("/urls");
@@ -162,12 +231,12 @@ app.get("/register", (req, res) => {
  * Create a URL Page
  * POST /urls
  */
-
+// I HAVE TO COME BACK HERE
 app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
   const id = generateRandomString();
   urlDatabase[id] = req.body.longURL;
-  console.log(urlDatabase);
+  console.log("URL DATA BASE FROM POST URL: ", urlDatabase);
   const userId = req.cookies["user_id"];
   if(!userId) {
     res.status(403).send('You need to log in to shorten the url');
@@ -182,7 +251,12 @@ app.post("/urls", (req, res) => {
  */
 
 app.post("/urls/:urlId/delete", (req, res) => {
+  const userId = req.cookies["user_id"];
   const urlId = req.params.urlId;
+  if (urlDatabase[urlId].userID !== userId) {
+    res.status(403).send("This tinyURL doesn't belong to you. You can only delete URL from your own URLs.");
+    return;
+  }
   delete urlDatabase[urlId];
   res.redirect('/urls');
 });
@@ -196,9 +270,24 @@ app.post("/urls/:urlId", (req, res) => {
   const updatedURL = req.body.updatedURL;
   const urlId = req.params.urlId;
   const userId = req.cookies["user_id"];
-  urlDatabase[urlId] = updatedURL;
-  const templateVars = { id: urlId, longURL: updatedURL,  user: users[userId] };
-  res.render("urls_show", templateVars);
+  if (urlDatabase[urlId].userID !== userId) {
+    res.status(403).send("This tinyURL doesn't belong to you. You can only edit URL from your own URLs.");
+    return;
+  }
+  console.log("updated url is: ", updatedURL);
+  if (!updatedURL) {
+    const templateVars = {
+      id: urlId,
+      longURL: urlDatabase[urlId].longURL,
+      user: users[userId]
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    urlDatabase[urlId].longURL = updatedURL;
+    const templateVars = { id: urlId, longURL: updatedURL,  user: users[userId] };
+    res.render("urls_show", templateVars);
+  }
+  
 });
 
 /**
