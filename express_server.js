@@ -10,6 +10,10 @@ const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
+const findUserByEmail = require("./helpers.js");
+const checkShortUrl = require("./helpers.js");
+const urlsForUser = require("./helpers.js");
+
 /////////////////////////////////////////////////////////////////////////////////
 // Set-up / Initialize
 /////////////////////////////////////////////////////////////////////////////////
@@ -61,42 +65,6 @@ const users = {
 };
 
 /////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS
-/////////////////////////////////////////////////////////////////////////////////
-
-const findUserByEmail = function (email, users) {
-  for (const key in users) {
-    if (users[key].email === email) {
-      return users[key];
-    }
-  }
-  return null;
-};
-
-const checkShortUrl = function (shortUrl) {
-  for (let short in urlDatabase) {
-    if (short === shortUrl) {
-      return shortUrl;
-    }
-  }
-  return undefined;
-};
-
-const urlsForUser = function (id){
-  if (id === undefined) {
-    return undefined;
-  }
-  const currentUserUrls = {};
-  for (let ids in urlDatabase) {
-    if (urlDatabase[ids].userID === id) {
-      currentUserUrls[ids] = urlDatabase[ids];
-    }
-  }
-  return currentUserUrls;
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////
 // Routes ------- GET
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -116,9 +84,9 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   // const userId = req.cookies["user_id"];
   const userId = req.session.user_id;
-  const currentUserUrls = urlsForUser(userId)
-  console.log("url obj from func: ", urlsForUser(userId));
-  console.log("UserID on /url page: ", users[userId]);
+  const currentUserUrls = urlsForUser(userId, urlDatabase)
+  // console.log("url obj from func: ", urlsForUser(userId, urlDatabase));
+  // console.log("UserID on /url page: ", users[userId]);
   const templateVars = {
     user: users[userId],
     urls: currentUserUrls };
@@ -171,12 +139,12 @@ app.get("/urls/:id", (req, res) => {
     res.redirect("/urls");
   }
   const urlID = req.params.id;
-  if (checkShortUrl(urlID) === undefined) {
+  if (checkShortUrl(urlID, urlDatabase) === undefined) {
     res.status(404).send(`This tinyURL hasn't yet been created.`);
     return;
   } else {
     const longUrl = urlDatabase[urlID].longURL;
-    const currentUserUrls= urlsForUser(userId);
+    const currentUserUrls= urlsForUser(userId, urlDatabase);
     if (currentUserUrls[urlID]) {
       const templateVars = { 
         id: urlID, 
