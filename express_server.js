@@ -7,7 +7,7 @@ function generateRandomString() {
 // Dependencies
 /////////////////////////////////////////////////////////////////////////////////
 const express = require("express");
-const cookieParser = require('cookie-parser')
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,13 @@ const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'whatever',
+  keys: ['fakerisbee'],
+
+  // Cookie Options
+  // maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 /////////////////////////////////////////////////////////////////////////////////
 // Database
@@ -108,7 +114,8 @@ app.get("/", (req, res) => {
  * GET /urls
  */
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const currentUserUrls = urlsForUser(userId)
   console.log("url obj from func: ", urlsForUser(userId));
   console.log("UserID on /url page: ", users[userId]);
@@ -126,7 +133,8 @@ app.get("/urls", (req, res) => {
  */
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   console.log("url/new userID: ", userId)
   if (userId === undefined) {
     res.redirect("/login");
@@ -157,7 +165,8 @@ app.get("/urls/new", (req, res) => {
 // });
 
 app.get("/urls/:id", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (!userId) {
     res.redirect("/urls");
   }
@@ -190,7 +199,8 @@ app.get("/urls/:id", (req, res) => {
  */
 
 app.get("/login", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   console.log("user")
   console.log("user id from login: ", userId);
   if (userId) { // Checking if the nuser is already logged in
@@ -209,7 +219,8 @@ app.get("/login", (req, res) => {
  */
 
 app.get("/register", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (userId) { // Checking if the nuser is already logged in
     res.redirect("/urls");
   }
@@ -234,7 +245,8 @@ app.get("/register", (req, res) => {
 // I HAVE TO COME BACK HERE
 app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if(!userId) {
     res.status(403).send('You need to log in to shorten the url');
   } else {
@@ -251,7 +263,8 @@ app.post("/urls", (req, res) => {
  */
 
 app.post("/urls/:urlId/delete", (req, res) => {
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const urlId = req.params.urlId;
   if (urlDatabase[urlId].userID !== userId) {
     res.status(403).send("This tinyURL doesn't belong to you. You can only delete URL from your own URLs.");
@@ -269,7 +282,8 @@ app.post("/urls/:urlId/delete", (req, res) => {
 app.post("/urls/:urlId", (req, res) => {
   const updatedURL = req.body.updatedURL;
   const urlId = req.params.urlId;
-  const userId = req.cookies["user_id"];
+  // const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   if (urlDatabase[urlId].userID !== userId) {
     res.status(403).send("This tinyURL doesn't belong to you. You can only edit URL from your own URLs.");
     return;
@@ -306,7 +320,8 @@ app.post("/login", (req, res) => {
   }
   const userId = user.userId;
   console.log('User ID from post login: ', userId);
-  res.cookie('user_id', userId);
+  // res.cookie('user_id', userId);
+  req.session.user_id = userId;
   res.redirect("/urls");
 });
 
@@ -316,7 +331,8 @@ app.post("/login", (req, res) => {
  * POST /logout, clearing the user_id cookie and logging out the user
  */
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -341,7 +357,8 @@ app.post("/register", (req, res) => {
       "email": email,
       "password": hashedPassword
     };
-    res.cookie("user_id", userId);
+    // res.cookie("user_id", userId);
+    req.session.user_id = userId;
     res.redirect("/urls");
     return;
   } else {
