@@ -5,11 +5,8 @@
 // returns the complete user object from users dataase
 
 const findUserByEmail = function (useremail, users) {
-  console.log('We are in the helper findUserByEmail');
   for (const key in users) {
-    console.log('key in user database: ', key);
     if (users[key].email === useremail) {
-      console.log('Users key from function findUserBtEmail: ', users[key]);
       return users[key];
     }
   }
@@ -37,10 +34,7 @@ const urlsForUser = function (id, urlDatabase){
       currentUserUrls[ids] = urlDatabase[ids];
     }
   }
-  console.log('current User urls from function', currentUserUrls);
   return currentUserUrls;
 };
 
 module.exports = { findUserByEmail, checkShortUrl, urlsForUser};
-// module.exports = checkShortUrl;
-// module.exports = urlsForUser;
