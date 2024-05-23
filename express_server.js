@@ -8,7 +8,7 @@ function generateRandomString() {
 /////////////////////////////////////////////////////////////////////////////////
 const express = require("express");
 const cookieParser = require('cookie-parser')
-
+const bcrypt = require("bcryptjs");
 
 /////////////////////////////////////////////////////////////////////////////////
 // Set-up / Initialize
@@ -234,13 +234,13 @@ app.get("/register", (req, res) => {
 // I HAVE TO COME BACK HERE
 app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
-  const id = generateRandomString();
-  urlDatabase[id] = req.body.longURL;
-  console.log("URL DATA BASE FROM POST URL: ", urlDatabase);
   const userId = req.cookies["user_id"];
   if(!userId) {
     res.status(403).send('You need to log in to shorten the url');
   } else {
+    const id = generateRandomString();
+    urlDatabase[id] = req.body.longURL;
+    console.log("URL DATA BASE FROM POST URL: ", urlDatabase);
     res.redirect(`/urls/${id}`);
   }
 });
@@ -276,12 +276,7 @@ app.post("/urls/:urlId", (req, res) => {
   }
   console.log("updated url is: ", updatedURL);
   if (!updatedURL) {
-    const templateVars = {
-      id: urlId,
-      longURL: urlDatabase[urlId].longURL,
-      user: users[userId]
-    };
-    res.render("urls_show", templateVars);
+    res.status(403).send("Please enter the valid URL to update");
   } else {
     urlDatabase[urlId].longURL = updatedURL;
     const templateVars = { id: urlId, longURL: updatedURL,  user: users[userId] };
@@ -299,15 +294,16 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = findUserByEmail(email, users);
+  const hashedPassword = user.password;
   console.log('user during login: ', user)
   if (email === "" || password === "") { // No email or password input
     res.status(403).send('Email and/or password cannot be empty.');
   } else if (!user) {
     res.status(403).send('This email is not registered.');
-  } else if (user.password !== password) {
+  } else if (!bcrypt.compareSync(password, hashedPassword)) {
     res.status(403).send('Wrong password.');
+    return;
   }
-
   const userId = user.userId;
   console.log('User ID from post login: ', userId);
   res.cookie('user_id', userId);
@@ -332,6 +328,8 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   if (email === "" || password === "") {
     res.status(400).send('Email and/or password cannot be empty.');
   }
@@ -339,9 +337,9 @@ app.post("/register", (req, res) => {
   if (!findUserByEmail(email, users)) {
     const userId = generateRandomString();
     users[userId] = {
-      userId,
-      email,
-      password
+      "userId": userId,
+      "email": email,
+      "password": hashedPassword
     };
     res.cookie("user_id", userId);
     res.redirect("/urls");
@@ -349,7 +347,6 @@ app.post("/register", (req, res) => {
   } else {
     res.status(400).send('This email is already registered.');
   }
-
 });
 
 /////////////////////////////////////////////////////////////////////////////////
